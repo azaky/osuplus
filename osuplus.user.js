@@ -2428,11 +2428,11 @@
 
         function detailify(top, score, beatmap){
             var maxmapcombo = $("<span></span>").css("color", "#b7b1e5");
-            if(beatmap && beatmap.max_combo !== null){
+            if (beatmap && beatmap.max_combo !== null) {
                 maxmapcombo.text("(" + beatmap.max_combo + "x)");
             }
             var h = top.find(".h");
-            if(score.perfect === "1"){
+            if (score.perfect === "1") {
                 h.append("(FC)");
             }
             h.append(makeScoreStats(score, maxmapcombo));
@@ -3079,6 +3079,9 @@
                 }
             }
             top.find(".play-detail__title").after(makeScoreStats(score, maxmapcombo));
+
+            changeAccuracyColor(top);
+            changeHighComboPlayColor(top, score);
         }
 
         function makeScoreStats(score, maxmapcombo){
@@ -3094,6 +3097,32 @@
                         // Mania
                         ` { ${score.countgeki} / ${score.count300} / ${score.countkatu} / ${score.count100} / ${score.count50} / ${score.countmiss} }`
             );
+        }
+
+        // The original accuracy colors are #fc2/hsl(46deg 100% 57%).
+        // These code below changes accuracy color hue by the range:
+        // [93%, 99%] -> [0, 60] (or red-ish -> bright yellow-ish).
+        // All accuracies below 93% will be the same color as 93%,
+        // and likewise, all accuracies above 99% will be the same color as 99%.
+        //
+        // TODO: Make this setting optional and configurable.
+        function changeAccuracyColor(top) {
+            var minAcc = 93, maxAcc = 99;
+            var minHue = 0, maxHue = 60;
+            var acc = parseFloat(top.find(".play-detail__accuracy").text());
+            var hue = minHue + Math.max(0, Math.floor((Math.min(acc, maxAcc) - minAcc)
+                * (maxHue - minHue) / (maxAcc - minAcc)));
+            top.find(".play-detail__accuracy").css("color", `hsl(${hue}deg 100% 57%`);
+        }
+
+        // The code below colors the stat to cyan if the combo is at least 1000.
+        //
+        // TODO: Make this setting optional and configurable.
+        function changeHighComboPlayColor(top, score) {
+            if (score.maxcombo > 999) {
+                top.find(".play-detail__title").css("color", "cyan");
+                top.find(".play-detail__opstats").css("color", "cyan");
+            }
         }
 
         function addModalBtn(top, beatmap_id){
